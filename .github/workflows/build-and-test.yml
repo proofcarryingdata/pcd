@@ -77,3 +77,5 @@ jobs:
       - run: "yarn test:ci"
       - name: "Test that template package works out-of-the-box"
         run: "yarn turbo run test-generated-package --filter='//'"
+      - name: "Test generated developer documentaiton"
+        run: "yarn docs"
