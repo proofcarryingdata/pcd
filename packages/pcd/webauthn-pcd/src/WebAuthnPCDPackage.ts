@@ -21,10 +21,10 @@ export async function prove(args: WebAuthnPCDArgs): Promise<WebAuthnPCD> {
     rpID: args.rpID,
     challenge: args.challenge,
     allowCredentials: [
-      {
-        id: args.authenticator.credentialID,
-        type: "public-key"
-      }
+      // {
+      //   id: args.authenticator.credentialID,
+      //   type: "public-key"
+      // }
     ]
   });
   const authenticationResponseJSON = await startAuthentication(
@@ -50,7 +50,9 @@ export async function prove(args: WebAuthnPCDArgs): Promise<WebAuthnPCD> {
 export async function verify(pcd: WebAuthnPCD): Promise<boolean> {
   const { verified } = await verifyAuthenticationResponse({
     response: pcd.proof,
-    expectedChallenge: pcd.claim.challenge,
+    expectedChallenge: Buffer.from(pcd.claim.challenge)
+      .toString("base64")
+      .replace(/=+$/, ""),
     expectedOrigin: pcd.claim.origin,
     expectedRPID: pcd.claim.rpID,
     authenticator: {

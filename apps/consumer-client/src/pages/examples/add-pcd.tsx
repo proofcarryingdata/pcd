@@ -108,6 +108,10 @@ export default function Page(): JSX.Element {
   const [podFolder, setPODFolder] = useState("Test PODs");
   const [podFolder2, setPODFolder2] = useState("Test PODs");
   const [gpcFolder, setGPCFolder] = useState("Test GPCs");
+  const [webAuthnInfo, setWebAuthnInfo] = useState<WebAuthnInfo | null>(null);
+  const [serializedWebAuthnPCD, setSerializedWebAuthnPCD] = useState<
+    string | null
+  >(null);
 
   return (
     <div>
@@ -379,6 +383,74 @@ export default function Page(): JSX.Element {
           }
         >
           add a GPC Proof to Zupass
+        </button>
+      </ExampleContainer>
+      <ExampleContainer>
+        Webauthn example: <br />
+        <button
+          onClick={async () => {
+            try {
+              const info = await registerWebAuthnCredential();
+              setWebAuthnInfo(info);
+              console.log("WebAuthn credential created successfully:", info);
+            } catch (err) {
+              console.error("Error creating WebAuthn credential:", err);
+            }
+          }}
+        >
+          Register new WebAuthn credential
+        </button>
+        <br />
+        Example data to sign: <br />
+        <br />
+        <textarea
+          cols={45}
+          rows={15}
+          value={podContent}
+          onChange={(e): void => {
+            setPODContent(e.target.value);
+          }}
+        />
+        <br />
+        <button
+          onClick={async () => {
+            if (!webAuthnInfo) {
+              alert("Please register a WebAuthn credential first");
+              return;
+            }
+            try {
+              console.log("Data to sign:", JSON.stringify(podContent));
+              const pcd = await signWithWebAuthn(
+                JSON.stringify(podContent),
+                webAuthnInfo
+              );
+              setSerializedWebAuthnPCD(pcd);
+              console.log("Signed successfully with WebAuthn");
+            } catch (err) {
+              console.error("Error signing with WebAuthn:", err);
+            }
+          }}
+          disabled={!webAuthnInfo}
+        >
+          Sign PCD with WebAuthn
+        </button>
+        <br />
+        <button
+          onClick={async () => {
+            if (!serializedWebAuthnPCD) {
+              alert("Please sign a message first");
+              return;
+            }
+            try {
+              await verifyWebAuthnPCD(serializedWebAuthnPCD);
+              console.log("Verified successfully with WebAuthn");
+            } catch (err) {
+              console.error("Error verifying with WebAuthn:", err);
+            }
+          }}
+          disabled={!serializedWebAuthnPCD}
+        >
+          Verify PCD with WebAuthn
         </button>
       </ExampleContainer>
     </div>
@@ -683,6 +755,86 @@ async function addIdentityPCD(): Promise<void> {
   );
 
   sendZupassRequest(url);
+}
+
+type WebAuthnInfo = {
+  credentialID: Uint8Array;
+  credentialPublicKey: Uint8Array;
+  counter: number;
+};
+
+async function registerWebAuthnCredential(): Promise<WebAuthnInfo> {
+  // Register a new WebAuthn credential for testing.
+  const generatedRegistrationOptions = await generateRegistrationOptions({
+    rpName: "consumer-client",
+    rpID: window.location.hostname,
+    userID: "user-id",
+    userName: "user",
+    attestationType: "direct",
+    challenge: "challenge",
+    supportedAlgorithmIDs: [-7]
+  });
+  const startRegistrationResponse = await startRegistration(
+    generatedRegistrationOptions
+  );
+  const verificationResponse = await verifyRegistrationResponse({
+    response: startRegistrationResponse,
+    expectedOrigin: window.location.origin,
+    expectedChallenge: generatedRegistrationOptions.challenge,
+    supportedAlgorithmIDs: [-7] // support ES256 signing algorithm
+  });
+
+  console.log(`verificationResponse`, verificationResponse);
+  if (!verificationResponse.registrationInfo) {
+    throw new Error("Registration failed the return correct response.");
+  }
+
+  // Get relevant credential arguments from registration response.
+  const { credentialID, credentialPublicKey, counter } =
+    verificationResponse.registrationInfo;
+
+  return { credentialID, credentialPublicKey, counter };
+}
+
+async function signWithWebAuthn(
+  dataToSign: string,
+  webAuthnInfo: WebAuthnInfo
+): Promise<string> {
+  const { credentialID, credentialPublicKey, counter } = webAuthnInfo;
+
+  try {
+    // Create new WebAuthn PCD
+    const PCD = await WebAuthnPCDPackage.prove({
+      challenge: dataToSign, // arbitrary challenge to be signed
+      origin: window.location.origin,
+      rpID: window.location.hostname,
+      authenticator: {
+        credentialID,
+        credentialPublicKey,
+        counter
+      }
+    });
+
+    console.log("WebAuthn PCD created:", PCD);
+
+    const serializedPCD = await WebAuthnPCDPackage.serialize(PCD);
+
+    console.log("Serialized PCD:", serializedPCD);
+
+    return JSON.stringify(serializedPCD);
+  } catch (err) {
+    console.error("Error creating WebAuthn credential:", err);
+    throw err;
+  }
+}
+
+async function verifyWebAuthnPCD(serializedPCD: string): Promise<void> {
+  const parsed = JSON.parse(serializedPCD) as SerializedPCD;
+  console.log("Parsed serializedPCD:", parsed);
+  const pcd = await WebAuthnPCDPackage.deserialize(parsed.pcd);
+  console.log("Deserialized PCD:", pcd);
+  const verified = await WebAuthnPCDPackage.verify(pcd);
+  console.log("WebAuthn PCD verified:", verified);
 }
 
 async function addWebAuthnPCD(): Promise<void> {
