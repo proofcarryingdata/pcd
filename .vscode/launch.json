@@ -5,6 +5,38 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "args": [
+        "-r",
+        "ts-node/register",
+        "--config",
+        "${workspaceFolder}/.mocharc.js",
+        "--no-timeouts",
+        "--exit",
+        "${file}"
+      ],
+      "cwd": "${fileDirname}",
+      "internalConsoleOptions": "openOnSessionStart",
+      "name": "TS Mocha Test (Current File)",
+      "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+      "request": "launch",
+      "type": "node"
+    },
+    {
+      "args": [
+        "--config",
+        "${workspaceFolder}/.mocharc.js",
+        "--no-timeouts",
+        "--exit",
+        "${file}"
+      ],
+      "cwd": "${fileDirname}/../../../..",
+      "internalConsoleOptions": "openOnSessionStart",
+      "name": "TS Mocha Alternative (with fixed CWD path)",
+      "program": "${workspaceFolder}/node_modules/ts-mocha/bin/ts-mocha",
+      "request": "launch",
+      "type": "node"
+    },
+    {
       "type": "node",
       "request": "attach",
       "name": "Attach to Mocha test",
