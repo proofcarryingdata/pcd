@@ -1,0 +1,23 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist/cjs",
+    "module": "CommonJS",
+    "tsBuildInfoFile": "./tsconfig.cjs.tsbuildinfo"
+  },
+  // For CJS/ESM builds, do not include test files
+  "include": ["src", "artifacts/*.json"],
+  // DO NOT MODIFY MANUALLY BEYOND THIS POINT
+  // References are automatically maintained by `yarn fix-references`
+  "references": [
+    {
+      "path": "../../lib/passport-ui/tsconfig.cjs.json"
+    },
+    {
+      "path": "../../lib/pcd-types/tsconfig.cjs.json"
+    },
+    {
+      "path": "../../pcd/pod-email-pcd/tsconfig.cjs.json"
+    }
+  ]
+}

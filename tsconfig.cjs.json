@@ -88,6 +88,9 @@
       "path": "packages/pcd/obj-pcd/tsconfig.cjs.json"
     },
     {
+      "path": "packages/pcd/pod-email-pcd/tsconfig.cjs.json"
+    },
+    {
       "path": "packages/pcd/pod-pcd/tsconfig.cjs.json"
     },
     {
@@ -152,6 +155,9 @@
     },
     {
       "path": "packages/ui/message-pcd-ui/tsconfig.cjs.json"
+    },
+    {
+      "path": "packages/ui/pod-email-pcd-ui/tsconfig.cjs.json"
     },
     {
       "path": "packages/ui/pod-pcd-ui/tsconfig.cjs.json"

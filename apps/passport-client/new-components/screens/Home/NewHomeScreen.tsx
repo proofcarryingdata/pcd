@@ -44,6 +44,7 @@ import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/16/solid";
 import { isEmailPCD } from "@pcd/email-pcd";
 import { PCDGetRequest } from "@pcd/passport-interface";
 import { Spacer } from "@pcd/passport-ui";
+import { isPODEmailPCD } from "@pcd/pod-email-pcd";
 import { isSemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
 import {
   ReactElement,
@@ -195,8 +196,12 @@ export const NewHomeScreen = (): ReactElement => {
   const noPods =
     collection
       .getAll()
-      .filter((pcd) => !isEmailPCD(pcd) && !isSemaphoreIdentityPCD(pcd))
-      .length === 0;
+      .filter(
+        (pcd) =>
+          !isEmailPCD(pcd) &&
+          !isSemaphoreIdentityPCD(pcd) &&
+          !isPODEmailPCD(pcd)
+      ).length === 0;
 
   const orientation = useOrientation();
   const isLandscape =

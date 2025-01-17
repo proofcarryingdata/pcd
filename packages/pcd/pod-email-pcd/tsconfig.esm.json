@@ -1,0 +1,20 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist/esm",
+    "module": "ESNext",
+    "tsBuildInfoFile": "./tsconfig.esm.tsbuildinfo"
+  },
+  // For CJS/ESM builds, do not include test files
+  "include": ["src", "artifacts/*.json"],
+  // DO NOT MODIFY MANUALLY BEYOND THIS POINT
+  // References are automatically maintained by `yarn fix-references`
+  "references": [
+    {
+      "path": "../../lib/pcd-types/tsconfig.esm.json"
+    },
+    {
+      "path": "../../lib/pod/tsconfig.esm.json"
+    }
+  ]
+}

@@ -10,8 +10,10 @@ import {
   requestRemoveUserEmail
 } from "@pcd/passport-interface";
 import { PCDActionType, isReplaceInFolderAction } from "@pcd/pcd-collection";
+import { encodePublicKey } from "@pcd/pod";
+import { PODEmailPCDPackage, PODEmailPCDTypeName } from "@pcd/pod-email-pcd";
 import { Identity } from "@semaphore-protocol/identity";
-import { expect } from "chai";
+import { assert, expect } from "chai";
 import "mocha";
 import { step } from "mocha-steps";
 import * as MockDate from "mockdate";
@@ -764,25 +766,51 @@ async function testGetEmailPCDs(
   const action = pollFeedResult?.value?.actions?.[1];
   expectToExist(action, isReplaceInFolderAction);
   expect(action.type).to.eq(PCDActionType.ReplaceInFolder);
-  expect(action.pcds.length).to.eq(expectedEmails.length);
+  // the feed issues both POD and non-POD email PCDs, so we expect 2 PCDs for each email
+  expect(action.pcds.length).to.eq(expectedEmails.length * 2);
 
   const result: EmailPCD[] = [];
 
+  const serverPublicKey =
+    await giBackend.services.issuanceService?.getEdDSAPublicKey();
+  assert(serverPublicKey, "Server public key should exist");
+
   for (const pcd of action.pcds) {
-    expect(pcd.type).to.eq(EmailPCDTypeName);
+    expect(pcd.type).to.be.oneOf([EmailPCDTypeName, PODEmailPCDTypeName]);
 
-    // Check that the PCD contains the expected email address
-    const deserializedPCD = await EmailPCDPackage.deserialize(pcd.pcd);
-    expect(expectedEmails).to.include(deserializedPCD.claim.emailAddress);
-    result.push(deserializedPCD);
+    if (pcd.type === EmailPCDTypeName) {
+      // Check that the PCD contains the expected email address
+      const deserializedPCD = await EmailPCDPackage.deserialize(pcd.pcd);
+      expect(expectedEmails).to.include(deserializedPCD.claim.emailAddress);
+      result.push(deserializedPCD);
 
-    // Check that the PCD verifies
-    expect(await EmailPCDPackage.verify(deserializedPCD)).to.be.true;
+      // Check that the PCD verifies
+      expect(await EmailPCDPackage.verify(deserializedPCD)).to.be.true;
 
-    // Check the public key
-    expect(deserializedPCD.proof.eddsaPCD.claim.publicKey).to.deep.eq(
-      await giBackend.services.issuanceService?.getEdDSAPublicKey()
-    );
+      // Check the public key
+      expect(deserializedPCD.proof.eddsaPCD.claim.publicKey).to.deep.eq(
+        serverPublicKey
+      );
+    } else {
+      // Check the PODEmailPCD
+      const podEmailPCD = await PODEmailPCDPackage.deserialize(pcd.pcd);
+      expect(podEmailPCD.claim.signerPublicKey).to.deep.eq(
+        encodePublicKey([
+          BigInt(`0x${serverPublicKey[0]}`),
+          BigInt(`0x${serverPublicKey[1]}`)
+        ])
+      );
+      expect(expectedEmails).to.include(
+        podEmailPCD.claim.podEntries.emailAddress.value
+      );
+      /**
+       * @todo right now the POD Email PCDs aren't used for anything, so we don't
+       * return them here. When we do, we should push them into the result array.
+       */
+
+      // Check that the PODEmailPCD verifies
+      expect(await PODEmailPCDPackage.verify(podEmailPCD)).to.be.true;
+    }
   }
 
   return result;

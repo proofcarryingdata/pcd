@@ -9,6 +9,7 @@ import { MessagePCDPackage } from "@pcd/message-pcd";
 import { requestLogToServer } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { PCD, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
+import { PODEmailPCDPackage } from "@pcd/pod-email-pcd";
 import { PODPCDPackage } from "@pcd/pod-pcd";
 import { PODTicketPCDPackage } from "@pcd/pod-ticket-pcd";
 import { RSAImagePCDPackage } from "@pcd/rsa-image-pcd";
@@ -98,6 +99,7 @@ async function loadPackages(): Promise<PCDPackage[]> {
     PODPCDPackage,
     PODTicketPCDPackage,
     GPCPCDPackage,
+    PODEmailPCDPackage,
     UnknownPCDPackage
   ];
 }

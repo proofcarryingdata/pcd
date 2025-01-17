@@ -1,4 +1,5 @@
 import { isEmailPCD } from "@pcd/email-pcd";
+import { isPODEmailPCD } from "@pcd/pod-email-pcd";
 import { isSemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
 import {
   ReactElement,
@@ -9,6 +10,10 @@ import {
 } from "react";
 import { useSearchParams } from "react-router-dom";
 import styled from "styled-components";
+import { ZappButton } from "../../../components/screens/ZappScreens/ZappButton";
+import { ZappButtonsContainer } from "../../../components/screens/ZappScreens/ZappButtonsContainer";
+import { ZappFullScreen } from "../../../components/screens/ZappScreens/ZappFullScreen";
+import { appConfig } from "../../../src/appConfig";
 import { useDispatch, usePCDCollection, useSelf } from "../../../src/appHooks";
 import { BANNER_HEIGHT, MAX_WIDTH_SCREEN } from "../../../src/sharedConstants";
 import { nextFrame } from "../../../src/util";
@@ -16,10 +21,6 @@ import { PodsCollectionList } from "../../shared/Modals/PodsCollectionBottomModa
 import { Typography } from "../../shared/Typography";
 import { hideScrollCSS, replaceDotWithSlash } from "../../shared/utils";
 import { ScrollIndicator } from "./ScrollIndicator";
-import { ZappButtonsContainer } from "../../../components/screens/ZappScreens/ZappButtonsContainer";
-import { ZappButton } from "../../../components/screens/ZappScreens/ZappButton";
-import { appConfig } from "../../../src/appConfig";
-import { ZappFullScreen } from "../../../components/screens/ZappScreens/ZappFullScreen";
 
 const EMPTY_CARD_CONTAINER_HEIGHT = 220;
 const EmptyCardContainer = styled.div<{ longVersion: boolean }>`
@@ -124,8 +125,12 @@ export const NoUpcomingEventsState = ({
   const noPods =
     pods
       .getAll()
-      .filter((pcd) => !isEmailPCD(pcd) && !isSemaphoreIdentityPCD(pcd))
-      .length === 0;
+      .filter(
+        (pcd) =>
+          !isEmailPCD(pcd) &&
+          !isSemaphoreIdentityPCD(pcd) &&
+          !isPODEmailPCD(pcd)
+      ).length === 0;
 
   useLayoutEffect(() => {
     // Restore scroll position when list is shown again

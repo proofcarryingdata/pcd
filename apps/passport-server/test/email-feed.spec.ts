@@ -5,8 +5,10 @@ import {
   requestPollFeed
 } from "@pcd/passport-interface";
 import { PCDActionType, isReplaceInFolderAction } from "@pcd/pcd-collection";
+import { encodePublicKey } from "@pcd/pod";
+import { PODEmailPCDPackage, PODEmailPCDTypeName } from "@pcd/pod-email-pcd";
 import { Identity } from "@semaphore-protocol/identity";
-import { expect } from "chai";
+import { assert, expect } from "chai";
 import "mocha";
 import { step } from "mocha-steps";
 import MockDate from "mockdate";
@@ -75,8 +77,9 @@ describe("attested email feed functionality", function () {
       const action = pollFeedResult?.value?.actions?.[1];
       expectToExist(action, isReplaceInFolderAction);
       expect(action.type).to.eq(PCDActionType.ReplaceInFolder);
-      expect(action.pcds.length).to.eq(1);
+      expect(action.pcds.length).to.eq(2);
       expect(action.pcds[0].type).to.eq(EmailPCDTypeName);
+      expect(action.pcds[1].type).to.eq(PODEmailPCDTypeName);
 
       // Check that the PCD contains the expected email address
       const deserializedPCD = await EmailPCDPackage.deserialize(
@@ -87,10 +90,29 @@ describe("attested email feed functionality", function () {
       // Check that the PCD verifies
       expect(await EmailPCDPackage.verify(deserializedPCD)).to.be.true;
 
+      const serverPublicKey =
+        await application.services.issuanceService?.getEdDSAPublicKey();
+      assert(serverPublicKey, "Server public key should exist");
+
       // Check the public key
       expect(deserializedPCD.proof.eddsaPCD.claim.publicKey).to.deep.eq(
-        await application.services.issuanceService?.getEdDSAPublicKey()
+        serverPublicKey
       );
+
+      // Check the PODEmailPCD
+      const podEmailPCD = await PODEmailPCDPackage.deserialize(
+        action.pcds[1].pcd
+      );
+      expect(podEmailPCD.claim.podEntries.emailAddress.value).to.eq(testEmail);
+      expect(podEmailPCD.claim.signerPublicKey).to.deep.eq(
+        encodePublicKey([
+          BigInt(`0x${serverPublicKey[0]}`),
+          BigInt(`0x${serverPublicKey[1]}`)
+        ])
+      );
+
+      // Check that the PODEmailPCD verifies
+      expect(await PODEmailPCDPackage.verify(podEmailPCD)).to.be.true;
     }
   );
 });

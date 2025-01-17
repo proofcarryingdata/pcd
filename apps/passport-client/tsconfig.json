@@ -106,6 +106,12 @@
       "path": "../../packages/lib/pod"
     },
     {
+      "path": "../../packages/pcd/pod-email-pcd"
+    },
+    {
+      "path": "../../packages/ui/pod-email-pcd-ui"
+    },
+    {
       "path": "../../packages/pcd/pod-pcd"
     },
     {

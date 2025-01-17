@@ -1,0 +1,47 @@
+{
+  "name": "@pcd/pod-email-pcd",
+  "private": false,
+  "version": "0.1.0",
+  "license": "GPL-3.0-or-later",
+  "main": "./dist/cjs/src/index.js",
+  "module": "./dist/esm/src/index.js",
+  "types": "./dist/types/src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/types/src/index.d.ts",
+      "import": "./dist/esm/src/index.js",
+      "require": "./dist/cjs/src/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "./README.md",
+    "./LICENSE"
+  ],
+  "scripts": {
+    "lint": "eslint \"**/*.ts{,x}\"",
+    "build": "tsc -b tsconfig.cjs.json tsconfig.esm.json",
+    "typecheck": "yarn tsc --noEmit",
+    "prepublishOnly": "yarn clean && yarn build",
+    "test": "ts-mocha --type-check --config ../../../.mocharc.js --exit 'test/**/*.spec.ts'",
+    "clean": "rm -rf dist node_modules *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@pcd/pcd-types": "0.15.0",
+    "@pcd/pod": "0.5.0"
+  },
+  "devDependencies": {
+    "@pcd/eslint-config-custom": "0.15.0",
+    "@pcd/tsconfig": "0.15.0",
+    "@types/chai": "^4.3.5",
+    "@types/mocha": "^10.0.1",
+    "@zk-kit/eddsa-poseidon": "^1.1.0",
+    "eslint": "^8.57.0",
+    "mocha": "^10.2.0",
+    "ts-mocha": "^10.0.0",
+    "typescript": "^5.3.3"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

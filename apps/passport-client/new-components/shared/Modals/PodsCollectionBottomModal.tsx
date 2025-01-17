@@ -2,6 +2,7 @@ import { isEdDSAFrogPCD } from "@pcd/eddsa-frog-pcd";
 import { isEdDSATicketPCD } from "@pcd/eddsa-ticket-pcd";
 import { isEmailPCD } from "@pcd/email-pcd";
 import { PCD } from "@pcd/pcd-types";
+import { isPODEmailPCD } from "@pcd/pod-email-pcd";
 import {
   getImageUrlEntry,
   getDisplayOptions as getPodDisplayOptions,
@@ -57,7 +58,7 @@ const filterOverlappingEdDSATickets = (
     )
     .map((eddsa) => eddsa.id);
 
-  const noEmails = pcds.filter((p) => !isEmailPCD(p));
+  const noEmails = pcds.filter((p) => !isEmailPCD(p) && !isPODEmailPCD(p));
 
   return noEmails.filter((pcd) => !overlapping.includes(pcd.id));
 };
@@ -67,6 +68,8 @@ const getPcdName = (pcd: PCD<unknown, unknown>): string => {
       return pcd.claim.ticket.eventName + " - " + pcd.claim.ticket.ticketName;
     case isEmailPCD(pcd):
       return pcd.claim.emailAddress;
+    case isPODEmailPCD(pcd):
+      return pcd.claim.podEntries.emailAddress.value;
     case isPODPCD(pcd):
       return getPodDisplayOptions(pcd).header ?? pcd.id;
     case isEdDSAFrogPCD(pcd):

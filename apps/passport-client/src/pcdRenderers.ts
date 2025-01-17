@@ -15,6 +15,8 @@ import { HaLoNoncePCDUI } from "@pcd/halo-nonce-pcd-ui";
 import { MessagePCDTypeName } from "@pcd/message-pcd";
 import { MessagePCDUI } from "@pcd/message-pcd-ui";
 import { PCD, PCDUI } from "@pcd/pcd-types";
+import { PODEmailPCDTypeName } from "@pcd/pod-email-pcd";
+import { PODEmailPCDUI } from "@pcd/pod-email-pcd-ui";
 import { PODPCDTypeName } from "@pcd/pod-pcd";
 import { PODPCDUI } from "@pcd/pod-pcd-ui";
 import { PODTicketPCDTypeName } from "@pcd/pod-ticket-pcd";
@@ -55,6 +57,7 @@ const renderablePCDs = [
   PODPCDTypeName,
   PODTicketPCDTypeName,
   GPCPCDTypeName,
+  PODEmailPCDTypeName,
   UnknownPCDTypeName
 ] as const;
 
@@ -80,5 +83,6 @@ export const pcdRenderers: {
   [PODPCDTypeName]: PODPCDUI,
   [PODTicketPCDTypeName]: PODTicketPCDUI,
   [GPCPCDTypeName]: GPCPCDUI,
+  [PODEmailPCDTypeName]: PODEmailPCDUI,
   [UnknownPCDTypeName]: UnknownPCDUI
 };

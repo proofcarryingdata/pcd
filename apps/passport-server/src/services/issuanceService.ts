@@ -11,7 +11,7 @@ import {
   ITicketData,
   TicketCategory
 } from "@pcd/eddsa-ticket-pcd";
-import { EmailPCD, EmailPCDPackage } from "@pcd/email-pcd";
+import { EmailPCD, EmailPCDPackage, isEmailPCD } from "@pcd/email-pcd";
 import { getHash } from "@pcd/passport-crypto";
 import {
   Credential,
@@ -44,7 +44,10 @@ import {
   PCDPermissionType
 } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
+import { encodePublicKey } from "@pcd/pod";
+import { PODEmailPCD, PODEmailPCDPackage } from "@pcd/pod-email-pcd";
 import { RSAImagePCDPackage } from "@pcd/rsa-image-pcd";
+import { IdentityV3, v3tov4Identity } from "@pcd/semaphore-identity-pcd";
 import { RollbarService } from "@pcd/server-shared";
 import { ONE_HOUR_MS } from "@pcd/util";
 import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
@@ -189,7 +192,11 @@ export class IssuanceService {
                   type: PCDActionType.ReplaceInFolder,
                   folder: "Email",
                   pcds: await Promise.all(
-                    pcds.map((pcd) => EmailPCDPackage.serialize(pcd))
+                    pcds.map((pcd) =>
+                      isEmailPCD(pcd)
+                        ? EmailPCDPackage.serialize(pcd)
+                        : PODEmailPCDPackage.serialize(pcd)
+                    )
                   )
                 });
               });
@@ -584,7 +591,7 @@ export class IssuanceService {
   private async issueEmailPCDs(
     client: PoolClient,
     credential: VerifiedCredential
-  ): Promise<EmailPCD[]> {
+  ): Promise<(EmailPCD | PODEmailPCD)[]> {
     return traced("IssuanceService", "issueEmailPCDs", async (span) => {
       const user = await this.checkUserExists(client, credential);
 
@@ -598,33 +605,59 @@ export class IssuanceService {
         span?.setAttribute("emails", user.emails);
       }
 
-      return Promise.all(
+      const pcds = await Promise.all(
         user.emails.map((email) => {
           const stableId = "attested-email-" + email;
-          return EmailPCDPackage.prove({
-            privateKey: {
-              value: this.eddsaPrivateKey,
-              argumentType: ArgumentTypeName.String
-            },
-            id: {
-              value: stableId,
-              argumentType: ArgumentTypeName.String
-            },
-            emailAddress: {
-              value: email,
-              argumentType: ArgumentTypeName.String
-            },
-            semaphoreId: {
-              value: user.commitment,
-              argumentType: ArgumentTypeName.String
-            },
-            semaphoreV4Id: {
-              value: user.semaphore_v4_pubkey ?? undefined,
-              argumentType: ArgumentTypeName.String
-            }
-          });
+          const stablePodId = "pod-attested-email-" + email;
+          return Promise.all([
+            EmailPCDPackage.prove({
+              privateKey: {
+                value: this.eddsaPrivateKey,
+                argumentType: ArgumentTypeName.String
+              },
+              id: {
+                value: stableId,
+                argumentType: ArgumentTypeName.String
+              },
+              emailAddress: {
+                value: email,
+                argumentType: ArgumentTypeName.String
+              },
+              semaphoreId: {
+                value: user.commitment,
+                argumentType: ArgumentTypeName.String
+              },
+              semaphoreV4Id: {
+                value: user.semaphore_v4_pubkey ?? undefined,
+                argumentType: ArgumentTypeName.String
+              }
+            }),
+            PODEmailPCDPackage.prove({
+              id: {
+                value: stablePodId,
+                argumentType: ArgumentTypeName.String
+              },
+              privateKey: {
+                value: this.eddsaPrivateKey,
+                argumentType: ArgumentTypeName.String
+              },
+              emailAddress: {
+                value: email,
+                argumentType: ArgumentTypeName.String
+              },
+              semaphoreV4PublicKey: {
+                value:
+                  user.semaphore_v4_pubkey ??
+                  encodePublicKey(
+                    v3tov4Identity(new IdentityV3(user.commitment)).publicKey
+                  ),
+                argumentType: ArgumentTypeName.String
+              }
+            })
+          ]);
         })
       );
+      return pcds.flat();
     });
   }
 

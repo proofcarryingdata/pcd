@@ -1,0 +1,16 @@
+{
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", "src/**", "test/**"],
+      "outputs": ["dist/**", "*.tsbuildinfo"],
+      "cache": true
+    },
+    "test": {
+      "cache": true,
+      "dependsOn": ["build", "^gen-test-artifacts"],
+      "inputs": ["$TURBO_DEFAULT$", "test/**"]
+    }
+  }
+}

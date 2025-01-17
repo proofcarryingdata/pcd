@@ -60,6 +60,9 @@
       "path": "../../packages/lib/pod"
     },
     {
+      "path": "../../packages/pcd/pod-email-pcd"
+    },
+    {
       "path": "../../packages/pcd/pod-pcd"
     },
     {

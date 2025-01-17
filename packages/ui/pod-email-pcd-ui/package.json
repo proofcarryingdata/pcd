@@ -1,0 +1,42 @@
+{
+  "name": "@pcd/pod-email-pcd-ui",
+  "private": false,
+  "version": "0.1.0",
+  "license": "GPL-3.0-or-later",
+  "main": "./dist/cjs/src/index.js",
+  "module": "./dist/esm/src/index.js",
+  "types": "./dist/types/src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/types/src/index.d.ts",
+      "import": "./dist/esm/src/index.js",
+      "require": "./dist/cjs/src/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "./README.md",
+    "./LICENSE"
+  ],
+  "scripts": {
+    "lint": "eslint \"**/*.ts{,x}\"",
+    "build": "tsc -b tsconfig.cjs.json tsconfig.esm.json",
+    "typecheck": "yarn tsc --noEmit",
+    "prepublishOnly": "yarn clean && yarn build",
+    "clean": "rm -rf dist node_modules *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@pcd/passport-ui": "0.15.0",
+    "@pcd/pcd-types": "0.15.0",
+    "@pcd/pod-email-pcd": "0.1.0"
+  },
+  "devDependencies": {
+    "@pcd/eslint-config-custom": "0.15.0",
+    "@pcd/tsconfig": "0.15.0",
+    "eslint": "^8.57.0",
+    "typescript": "^5.3.3"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

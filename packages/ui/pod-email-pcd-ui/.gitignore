@@ -1,0 +1,5 @@
+*.js
+*.ts.map
+!.eslintrc.js
+dist
+*.tsbuildinfo
